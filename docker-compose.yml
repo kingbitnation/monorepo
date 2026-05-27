@@ -1,0 +1,17 @@
+version: "3.9"
+services:
+  project-1:
+    build:
+      context: ./apps/project-1
+    ports:
+      - "3001:80"
+  project-2:
+    build:
+      context: ./apps/project-2
+    ports:
+      - "3002:80"
+  project-3:
+    build:
+      context: ./apps/project-3
+    ports:
+      - "3003:80"

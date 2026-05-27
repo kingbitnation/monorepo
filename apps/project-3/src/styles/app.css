@@ -1,0 +1,14 @@
+@import "../../../../shared/styles/base.css";
+
+.navbar {
+  display: flex;
+  gap: 1rem;
+  padding: 1rem;
+  border-bottom: 1px solid #1f2937;
+}
+
+.page-wrap {
+  max-width: 960px;
+  margin: 0 auto;
+  padding: 1.5rem;
+}
