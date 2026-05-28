@@ -1,0 +1,60 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model Tenant {
+  id    String  @id @default(cuid())
+  name  String
+  users User[]
+  events Event[]
+}
+
+model User {
+  id           String   @id @default(cuid())
+  email        String   @unique
+  password     String
+  role         Role     @default(USER)
+  tenantId     String
+  tenant       Tenant   @relation(fields: [tenantId], references: [id])
+  refreshToken String?
+  createdAt    DateTime @default(now())
+  events       Event[]
+  subscriptions Subscription[]
+}
+
+model Event {
+  id        String   @id @default(cuid())
+  type      EventType
+  userId    String
+  user      User     @relation(fields: [userId], references: [id])
+  tenantId  String
+  tenant    Tenant   @relation(fields: [tenantId], references: [id])
+  metadata  String
+  createdAt DateTime @default(now())
+}
+
+model Subscription {
+  id                  String   @id @default(cuid())
+  userId              String
+  user                User     @relation(fields: [userId], references: [id])
+  stripeCustomerId    String
+  stripeSubscriptionId String
+  status              String
+}
+
+enum Role {
+  USER
+  ADMIN
+}
+
+enum EventType {
+  LOGIN
+  PAGE_VIEW
+  ACTION
+  SUBSCRIPTION
+}

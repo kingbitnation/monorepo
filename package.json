@@ -3,7 +3,8 @@
   "private": true,
   "version": "1.0.0",
   "workspaces": [
-    "apps/*"
+    "apps/*",
+    "server"
   ],
   "scripts": {
     "dev:project-1": "npm run dev --workspace project-1",
@@ -13,6 +14,9 @@
     "lint": "npm run lint --workspaces --if-present",
     "test": "npm run test --workspaces --if-present",
     "format": "npm run format --workspaces --if-present",
+    "dev:server": "npm run start:dev --workspace server",
+    "build:server": "npm run build --workspace server",
+    "start:server": "npm run start:prod --workspace server",
     "prepare": "husky"
   },
   "devDependencies": {
