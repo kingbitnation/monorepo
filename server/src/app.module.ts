@@ -7,6 +7,7 @@ import { BillingModule } from './billing/billing.module';
 import { AnalyticsModule } from './analytics/analytics.module';
 import { PrismaModule } from './prisma/prisma.module';
 import { TenantModule } from './tenant/tenant.module';
+import { MonitoringModule } from './monitoring/monitoring.module';
 
 @Module({
   imports: [
@@ -21,7 +22,8 @@ import { TenantModule } from './tenant/tenant.module';
     AuthModule,
     UsersModule,
     BillingModule,
-    AnalyticsModule
+    AnalyticsModule,
+    MonitoringModule
   ]
 })
 export class AppModule {}

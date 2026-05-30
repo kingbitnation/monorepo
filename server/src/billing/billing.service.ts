@@ -1,5 +1,6 @@
 import { Injectable } from '@nestjs/common';
 import Stripe from 'stripe';
+import { recordPaymentInitiated } from '../metrics';
 import { PrismaService } from '../prisma/prisma.service';
 
 @Injectable()
@@ -13,40 +14,49 @@ export class BillingService {
   }
 
   async createCheckoutSession(userId: string) {
-    const user = await this.prisma.user.findUnique({
-      where: { id: userId }
-    });
-    if (!user) {
-      throw new Error('User not found');
-    }
-
-    const customer = await this.stripe.customers.create({
-      email: user.email
-    });
-
-    const session = await this.stripe.checkout.sessions.create({
-      mode: 'subscription',
-      customer: customer.id,
-      line_items: [
-        {
-          price: process.env.STRIPE_PRO_PRICE_ID ?? '',
-          quantity: 1
-        }
-      ],
-      success_url: process.env.BILLING_SUCCESS_URL ?? '',
-      cancel_url: process.env.BILLING_CANCEL_URL ?? ''
-    });
-
-    await this.prisma.subscription.create({
-      data: {
-        userId: user.id,
-        stripeCustomerId: customer.id,
-        stripeSubscriptionId: '',
-        status: 'pending'
+    try {
+      const user = await this.prisma.user.findUnique({
+        where: { id: userId }
+      });
+      if (!user) {
+        recordPaymentInitiated('stripe', 'failed');
+        throw new Error('User not found');
       }
-    });
 
-    return { url: session.url };
+      const customer = await this.stripe.customers.create({
+        email: user.email
+      });
+
+      const session = await this.stripe.checkout.sessions.create({
+        mode: 'subscription',
+        customer: customer.id,
+        line_items: [
+          {
+            price: process.env.STRIPE_PRO_PRICE_ID ?? '',
+            quantity: 1
+          }
+        ],
+        success_url: process.env.BILLING_SUCCESS_URL ?? '',
+        cancel_url: process.env.BILLING_CANCEL_URL ?? ''
+      });
+
+      await this.prisma.subscription.create({
+        data: {
+          userId: user.id,
+          stripeCustomerId: customer.id,
+          stripeSubscriptionId: '',
+          status: 'pending'
+        }
+      });
+
+      recordPaymentInitiated('stripe', 'success');
+      return { url: session.url };
+    } catch (error) {
+      if (!(error instanceof Error && error.message === 'User not found')) {
+        recordPaymentInitiated('stripe', 'failed');
+      }
+      throw error;
+    }
   }
 
   async handleWebhook(rawBody: Buffer, sig: string | undefined) {
